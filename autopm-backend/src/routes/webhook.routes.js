@@ -45,15 +45,31 @@ router.post("/github", async (req, res) => {
 }
 
 
-  if (eventType === "pull_request") {
-    await ActivityLog.create({
-      type: "pull_request",
-      message: req.body.pull_request.title,
-      timestamp: new Date(req.body.pull_request.created_at),
-    });
+ if (eventType === "pull_request") {
+  const action = req.body.action;
+  const pr = req.body.pull_request;
 
-    console.log("Stored pull request activity");
+  if (action === "closed" && pr.merged) {
+    const match = pr.title.match(/\[TASK-(\d+)\]/);
+
+    if (match) {
+      const taskId = `TASK-${match[1]}`;
+
+      await Task.findOneAndUpdate(
+        { taskId },
+        { status: "Done" }
+      );
+
+      await ActivityLog.create({
+        type: "pull_request_merged",
+        message: pr.title,
+        timestamp: new Date(pr.merged_at),
+      });
+
+      console.log(`Task ${taskId} moved to Done`);
+    }
   }
+}
 
   res.status(200).send("OK");
 });

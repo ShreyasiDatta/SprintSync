@@ -2,6 +2,8 @@ require("dotenv").config();
 
 
 const app = require("./app");
+require("./cron/riskEngine");
+
 const connectDB = require("./config/db");
 
 

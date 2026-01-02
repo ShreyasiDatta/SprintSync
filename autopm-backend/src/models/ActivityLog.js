@@ -4,7 +4,7 @@ const activityLogSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["commit", "pull_request", "merge"],
+      enum: ["commit", "pull_request","pull_request_merged",  "merge"],
       required: true,
     },
     message: String,
