@@ -4,8 +4,10 @@ const authMiddleware = require("../middleware/authMiddleware");
 const {
   getGithubRepos,
   createProject,
+  getProjects
 } = require("../controllers/project.controller");
 
+router.get("/", authMiddleware, getProjects);  
 router.get("/github-repos/:userId", getGithubRepos);
 
 router.post("/", authMiddleware, createProject);
