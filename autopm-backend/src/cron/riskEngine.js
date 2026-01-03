@@ -9,20 +9,37 @@ cron.schedule("0 9 * * *", async () => {
   console.log("Running Risk Engine...");
 
   try {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - DAYS_INACTIVE);
+    const now = new Date();
+    let count = 0;
 
-    const result = await Task.updateMany(
-      {
-        status: { $ne: "Done" },
-        updatedAt: { $lt: cutoffDate },
-      },
-      {
-        status: "At Risk",
+    const tasks = await Task.find({
+      status: { $ne: "Done" },
+    });
+
+    for (const task of tasks) {
+      let markAtRisk = false;
+
+      // Rule 1: Inactivity
+      const inactiveDays =
+        (now - new Date(task.updatedAt)) / (1000 * 60 * 60 * 24);
+
+      if (inactiveDays >= DAYS_INACTIVE) {
+        markAtRisk = true;
       }
-    );
 
-    console.log(` ${result.modifiedCount} tasks marked At Risk`);
+      // Rule 2: Deadline missed
+      if (task.dueDate && new Date(task.dueDate) < now) {
+        markAtRisk = true;
+      }
+
+      if (markAtRisk && task.status !== "At Risk") {
+        task.status = "At Risk";
+        await task.save();
+        count++;
+      }
+    }
+
+    console.log(`${count} tasks marked At Risk`);
   } catch (error) {
     console.error("Risk Engine Error:", error);
   }

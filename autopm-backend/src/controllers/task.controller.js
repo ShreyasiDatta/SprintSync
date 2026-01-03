@@ -7,7 +7,7 @@ const Project = require("../models/Project");
  */
 exports.createTask = async (req, res) => {
   try {
-    const { taskId, title } = req.body;
+    const { taskId, title, dueDate } = req.body;
     const { projectId } = req.params;
 
     if (!taskId || !title) {
@@ -31,6 +31,7 @@ exports.createTask = async (req, res) => {
       title,
       project: projectId,
       status: "Todo",
+      dueDate,
       createdBy: req.user._id,
     });
 

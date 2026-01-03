@@ -1,48 +1,62 @@
 const Task = require("../models/Task");
 const ActivityLog = require("../models/ActivityLog");
 
-exports.getDailyStandup = async (req, res) => {
+
+
+exports.getDailyStandupText = async (req, res) => {
   try {
     const { projectId } = req.params;
+
+    const tasks = await Task.find({ project: projectId });
+
+    const yesterday = [];
+    const today = [];
+    const blockers = [];
 
     const since = new Date();
     since.setDate(since.getDate() - 1);
 
-    // Yesterday's activity
-    const recentActivity = await ActivityLog.find({
-      project: projectId,
-      timestamp: { $gte: since },
-    }).populate("task");
+    tasks.forEach((task) => {
+      // Yesterday summary
+      if (task.updatedAt >= since) {
+        if (task.status === "Done") {
+          yesterday.push(`${task.taskId} was completed`);
+        }
+        if (task.status === "In Progress") {
+          yesterday.push(`${task.taskId} moved to In Progress`);
+        }
+      }
 
-    // Today's tasks
-    const todayTasks = await Task.find({
-      project: projectId,
-      status: { $in: ["Todo", "In Progress"] },
+      // Today summary
+      if (task.status === "In Progress") {
+        today.push(`Continue working on ${task.taskId}`);
+      }
+
+      // Blockers
+      if (task.status === "At Risk") {
+        blockers.push(
+          `${task.taskId} is at risk due to inactivity or missed deadline`
+        );
+      }
     });
 
-    // Blockers
-    const blockers = await Task.find({
-      project: projectId,
-      status: "At Risk",
-    });
+    // Convert to readable text
+    const standupText = `
+Yesterday:
+${yesterday.length ? yesterday.map(i => `- ${i}`).join("\n") : "- No updates yesterday"}
+
+Today:
+${today.length ? today.map(i => `- ${i}`).join("\n") : "- No active tasks today"}
+
+Blockers:
+${blockers.length ? blockers.map(i => `- ${i}`).join("\n") : "- No blockers 🎉"}
+    `.trim();
 
     res.json({
-      yesterday: recentActivity.map((a) => ({
-        taskId: a.task?.taskId,
-        message: a.message,
-      })),
-      today: todayTasks.map((t) => ({
-        taskId: t.taskId,
-        title: t.title,
-        status: t.status,
-      })),
-      blockers: blockers.map((t) => ({
-        taskId: t.taskId,
-        title: t.title,
-      })),
+      standupText,
     });
-  } catch (err) {
-    console.error("Standup Error:", err);
+  } catch (error) {
+    console.error("Standup Text Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -15,6 +15,11 @@ const taskSchema = new mongoose.Schema(
       enum: ["Todo", "In Progress", "Done", "At Risk"],
       default: "Todo",
     },
+
+    dueDate: {
+      type: Date,
+    },
+    
     lastActivityAt: {
       type: Date
     },

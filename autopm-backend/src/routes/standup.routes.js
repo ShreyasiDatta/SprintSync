@@ -1,12 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
-const { getDailyStandup } = require("../controllers/standup.controller");
+const {
+  getDailyStandupText,
+} = require("../controllers/standup.controller");
 
 router.get(
-  "/projects/:projectId/standup",
+  "/projects/:projectId/standup-text",
   auth,
-  getDailyStandup
+  getDailyStandupText
 );
 
 module.exports = router;
+
