@@ -7,6 +7,7 @@ const {
 } = require("../controllers/project.controller");
 
 router.get("/github-repos/:userId", getGithubRepos);
+
 router.post("/", authMiddleware, createProject);
 
 module.exports = router;
